@@ -1,0 +1,5 @@
+# 开发/旧 CLI（analyze.py）才需要。朋友测试不用装。
+-r requirements.txt
+paddlepaddle
+paddleocr
+qrcode

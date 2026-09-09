@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Highway Reporter - 举报材料确认</title>
+<style>
+:root{
+  --bg:#F4EFE4;
+  --s1:#FFFBF5;
+  --s2:#F4EFE4;
+  --tx:#1C1914;
+  --tx2:#6B6458;
+  --ac:#C9A227;
+  --red:#C4452D;
+  --grn:#2F6F4E;
+  --org:#C9A227;
+  --asphalt:#2A2722;
+  --line:#D9D0C0;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'PingFang SC',-apple-system,sans-serif;background:var(--bg);color:var(--tx);padding:28px;max-width:960px;margin:0 auto}
+h1{font-family:'Songti SC',serif;font-size:28px;letter-spacing:.02em;margin-bottom:8px}
+.sub{color:var(--tx2);font-size:13px;margin-bottom:20px}
+.card{background:var(--s1);border-radius:4px;padding:16px;margin-bottom:16px;border:1px solid var(--line);box-shadow:0 8px 24px rgba(42,39,34,.08)}
+.card h2{font-size:16px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.badge{padding:2px 10px;border-radius:2px;font-size:12px;font-weight:600}
+.badge-ok{background:var(--grn);color:#fff}.badge-no{background:var(--red);color:#fff}.badge-warn{background:var(--ac);color:var(--tx)}
+
+/* 表单 */
+.form-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
+.form-row:last-child{border-bottom:none}
+.form-label{width:80px;font-size:13px;color:var(--tx2);flex-shrink:0}
+.form-value{flex:1;font-size:14px}
+.form-input{background:var(--s2);border:1px solid var(--line);color:var(--tx);padding:6px 10px;border-radius:2px;font-size:14px;width:100%;font-family:inherit}
+.form-input:focus{outline:2px solid var(--ac);outline-offset:2px;border-color:var(--ac)}
+.form-input.editable{border-color:var(--org);background:#F7EDD2}
+.conf{font-size:12px;padding:2px 8px;border-radius:2px;margin-left:8px}
+.conf-hi{background:#E4F0E8;color:var(--grn)}
+.conf-lo{background:#F8E6E2;color:var(--red)}
+
+/* 证据帧 */
+.evidence-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-top:8px}
+.evidence-img{width:100%;border-radius:4px;cursor:pointer;transition:transform .15s}
+.evidence-img:hover{transform:scale(1.02)}
+
+/* 按钮 */
+.btn{padding:8px 20px;border-radius:2px;border:none;cursor:pointer;font-size:14px;font-family:inherit;transition:all .12s}
+.btn:active{transform:scale(.96)}
+.btn:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.btn-primary{background:var(--ac);color:var(--tx);font-weight:600}
+.btn-primary:hover{background:#D4B44A}
+.btn-danger{background:var(--red);color:#fff}
+.btn-ghost{background:var(--s1);border:1px solid var(--line);color:var(--tx)}
+.btn-ghost:hover{border-color:var(--tx)}
+.actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+
+/* 投票 */
+.votes{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.vote-chip{font-size:12px;padding:2px 8px;border-radius:2px;background:var(--s2);color:var(--tx2);border:1px solid var(--line)}
+.vote-chip.winner{background:#F7EDD2;color:var(--tx);font-weight:600;border-color:var(--ac)}
+
+/* 模态 */
+.overlay{display:none;position:fixed;inset:0;background:rgba(28,25,20,.85);z-index:100;justify-content:center;align-items:center}
+.overlay.show{display:flex}
+.overlay img{max-width:95%;max-height:90vh;border-radius:4px}
+
+/* 空 */
+.empty{text-align:center;padding:60px 0;color:var(--tx2)}
+.stats{display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.stat{background:var(--s1);border-radius:4px;padding:12px 16px;text-align:center;min-width:100px;border:1px solid var(--line)}
+.stat-n{font-size:24px;font-weight:700}.stat-n.ac{color:var(--asphalt)}.stat-n.rd{color:var(--red)}.stat-n.gn{color:var(--grn)}
+.stat-l{font-size:11px;color:var(--tx2);margin-top:2px}
+</style>
+</head>
+<body>
+
+<h1>高速举报助手</h1>
+<p class="sub" id="videoInfo">加载中...</p>
+
+<div class="stats" id="stats"></div>
+<div id="violations"></div>
+
+<div class="overlay" id="overlay" onclick="this.classList.remove('show')">
+  <img id="previewImg" src="">
+</div>
+
+<script type="application/json" id="report-data"></script>
+<script>
+var report = null;
+var editedPlates = {};
+
+async function loadReport() {
+  var embedded = document.getElementById('report-data');
+  if (embedded && embedded.textContent.trim()) {
+    return JSON.parse(embedded.textContent);
+  }
+  var resp = await fetch('report.json');
+  if (!resp.ok) throw new Error('fetch failed');
+  return await resp.json();
+}
+
+async function init() {
+  try {
+    report = await loadReport();
+  } catch(e) {
+    document.getElementById('videoInfo').textContent = '没有读到分析结果';
+    document.getElementById('violations').innerHTML =
+      '<div class="empty">打不开这份结果页的数据。<br>请回到应用点「打开结果」，或用应用重新分析一次。</div>';
+    return;
+  }
+
+  var vi = report.video_info || {};
+  document.getElementById('videoInfo').textContent =
+    (report.video || '') + ' · ' + (vi.width||'?') + '×' + (vi.height||'?') +
+    ' · ' + (vi.duration||'?') + 's · 模型: ' + ((report.pipeline||{}).cloud_model||'?');
+
+  var vs = report.violations || [];
+  var canReport = vs.filter(function(v){return v.can_report}).length;
+  var totalCalls = (report.pipeline||{}).l2_api_calls || 0;
+
+  document.getElementById('stats').innerHTML =
+    '<div class="stat"><div class="stat-n ac">' + vs.length + '</div><div class="stat-l">总违法</div></div>' +
+    '<div class="stat"><div class="stat-n gn">' + canReport + '</div><div class="stat-l">可举报</div></div>' +
+    '<div class="stat"><div class="stat-n rd">' + (vs.length - canReport) + '</div><div class="stat-l">不可举报</div></div>' +
+    '<div class="stat"><div class="stat-n">' + totalCalls + '</div><div class="stat-l">API 调用</div></div>';
+
+  renderViolations(vs);
+}
+
+function renderViolations(vs) {
+  var html = '';
+  vs.forEach(function(v) {
+    var status = v.can_report;
+    var badgeCls = status ? 'badge-ok' : 'badge-no';
+    var badgeText = status ? '✅ 可举报' : '❌ 不可举报';
+    var confCls = (v.plate_confidence||0) >= 0.5 ? 'conf-hi' : 'conf-lo';
+
+    html += '<div class="card" id="v' + v.id + '">';
+    html += '<h2><span class="badge ' + badgeCls + '">' + badgeText + '</span> 违法 #' + v.id + '</h2>';
+
+    // 表单字段
+    var fields = [
+      {label: '车牌号码', key: 'plate', value: v.plate || '', editable: true,
+       extra: v.plate_confidence ? '<span class="conf ' + confCls + '">' + (v.plate_confidence*100).toFixed(0) + '%</span>' : ''},
+      {label: '违法类型', key: 'type', value: '占用应急车道', editable: false},
+      {label: '违法时间', key: 'time', value: v.time || '', editable: true, placeholder: '需手动填写'},
+      {label: '违法地点', key: 'location', value: v.location || '', editable: true, placeholder: '需GPS或手动填写'},
+      {label: '车辆颜色', key: 'color', value: v.color || '', editable: true},
+      {label: '车辆类型', key: 'vehicle_type', value: v.vehicle_type || '小型轿车', editable: true},
+      {label: '车速', key: 'speed', value: v.speed || '', editable: false},
+      {label: '时间段', key: 'range', value: v.start_sec + 's - ' + v.end_sec + 's (' + v.duration_sec + 's)', editable: false},
+    ];
+
+    fields.forEach(function(f) {
+      html += '<div class="form-row">';
+      html += '<div class="form-label">' + f.label + '</div>';
+      if (f.editable) {
+        var cls = 'form-input' + (f.key === 'plate' && !v.plate ? ' editable' : '');
+        html += '<input class="' + cls + '" id="field_' + v.id + '_' + f.key + '" value="' + (f.value||'').replace(/"/g,'&quot;') + '" placeholder="' + (f.placeholder||'') + '" onchange="markEdited(' + v.id + ',\'' + f.key + '\')">';
+        if (f.extra) html += f.extra;
+      } else {
+        html += '<div class="form-value">' + f.value + '</div>';
+      }
+      html += '</div>';
+    });
+
+    // 投票详情
+    if (v.plate_votes && Object.keys(v.plate_votes).length > 0) {
+      html += '<div style="padding:8px 0;font-size:12px;color:var(--tx2)">多帧投票:</div>';
+      html += '<div class="votes">';
+      var maxCount = Math.max.apply(null, Object.values(v.plate_votes));
+      for (var plate in v.plate_votes) {
+        var cnt = v.plate_votes[plate];
+        var cls = cnt === maxCount ? 'vote-chip winner' : 'vote-chip';
+        html += '<span class="' + cls + '">' + plate + ' ×' + cnt + '</span>';
+      }
+      html += '</div>';
+    }
+
+    // 问题列表
+    if (v.issues && v.issues.length > 0) {
+      html += '<div style="margin-top:8px">';
+      v.issues.forEach(function(issue) {
+        html += '<div style="font-size:12px;color:var(--org);padding:2px 0">⚠️ ' + issue + '</div>';
+      });
+      html += '</div>';
+    }
+
+    // 证据帧
+    html += '<div style="margin-top:12px;font-size:13px;color:var(--tx2)">证据帧 (' + (v.evidence_count||0) + ' 张):</div>';
+    html += '<div class="evidence-grid" id="evidence_' + v.id + '">加载中...</div>';
+
+    // 操作按钮
+    html += '<div class="actions">';
+    if (v.can_report) {
+      html += '<button class="btn btn-primary" onclick="exportReport(' + v.id + ')">📋 导出举报材料</button>';
+    }
+    html += '<button class="btn btn-ghost" onclick="copyPlate(' + v.id + ')">📋 复制车牌</button>';
+    html += '</div>';
+
+    html += '</div>';
+  });
+
+  document.getElementById('violations').innerHTML = html || '<div class="empty">无违法记录</div>';
+
+  // 加载证据帧图片
+  vs.forEach(function(v) {
+    loadEvidence(v.id);
+  });
+}
+
+function loadEvidence(vid) {
+  var el = document.getElementById('evidence_' + vid);
+  var v = report.violations.find(function(x) { return x.id === vid; });
+  if (!v) return;
+
+  var files = v.evidence_files || [];
+  if (files.length === 0) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--tx2)">无证据帧</div>';
+    return;
+  }
+
+  var html = '';
+  files.forEach(function(f) {
+    var url = 'violation_' + vid + '/' + f;
+    html += '<img class="evidence-img" src="' + url + '" onclick="previewImage(\'' + url + '\')" onerror="this.style.display=\'none\'">';
+  });
+
+  // 也加载 evidence.py 生成的 scene_ 和 clip
+  ['scene_1', 'scene_2'].forEach(function(prefix) {
+    // 尝试常见帧号
+    for (var fi = 300; fi < 500; fi += 20) {
+      html += '<img class="evidence-img" src="violation_' + vid + '/' + prefix + '_frame' + fi + '.jpg" '
+        + 'onclick="previewImage(this.src)" onerror="this.style.display=\'none\'" style="display:none" '
+        + 'onload="this.style.display=\'\'">';
+    }
+  });
+
+  el.innerHTML = html;
+}
+
+function markEdited(vid, key) {
+  var input = document.getElementById('field_' + vid + '_' + key);
+  if (input) input.classList.add('editable');
+}
+
+function copyPlate(vid) {
+  var input = document.getElementById('field_' + vid + '_plate');
+  if (input && input.value) {
+    navigator.clipboard.writeText(input.value);
+    alert('已复制: ' + input.value);
+  }
+}
+
+function exportReport(vid) {
+  var v = report.violations.find(function(x) { return x.id === vid; });
+  if (!v) return;
+
+  // 读取可能被用户编辑过的值
+  var plate = (document.getElementById('field_' + vid + '_plate') || {}).value || v.plate;
+  var time = (document.getElementById('field_' + vid + '_time') || {}).value || v.time;
+  var location = (document.getElementById('field_' + vid + '_location') || {}).value || v.location;
+  var color = (document.getElementById('field_' + vid + '_color') || {}).value || v.color;
+  var vtype = (document.getElementById('field_' + vid + '_vehicle_type') || {}).value || v.vehicle_type;
+
+  var text = '=== 交通违法举报材料 ===\n\n'
+    + '违法类型: 占用应急车道\n'
+    + '车牌号码: ' + (plate || '未识别') + '\n'
+    + '违法时间: ' + (time || '请补充') + '\n'
+    + '违法地点: ' + (location || '请补充') + '\n'
+    + '车辆颜色: ' + (color || '') + '\n'
+    + '车辆类型: ' + (vtype || '小型轿车') + '\n'
+    + '车速: ' + (v.speed || '') + '\n'
+    + '\n证据截图: ' + (v.evidence_count || 0) + ' 张\n'
+    + '位于 violation_' + vid + '/ 目录\n';
+
+  navigator.clipboard.writeText(text).then(function() {
+    alert('举报材料已复制到剪贴板！\n\n打开深圳交警随手e拍，逐项粘贴即可。');
+  });
+}
+
+function previewImage(url) {
+  document.getElementById('previewImg').src = url;
+  document.getElementById('overlay').classList.add('show');
+}
+
+init();
+</script>
+</body>
+</html>

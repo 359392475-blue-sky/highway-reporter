@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.local.json
+private/channel.json
+__pycache__/
+venv/
+.venv/
+*.log
+.DS_Store
+.openai/
+.wrangler/

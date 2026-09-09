@@ -1,0 +1,9 @@
+# Highway Reporter - 朋友测试用精简依赖
+# Install: pip install -r requirements.txt
+# 旧版本地 OCR 请另装: pip install -r requirements-dev.txt
+
+ultralytics>=8.0.0
+opencv-python-headless
+numpy
+torch
+Pillow

@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Highway Reporter - 违法识别验收</title>
+<style>
+:root {
+  --bg: #0f0f1a;
+  --surface: #1a1a2e;
+  --surface2: #252545;
+  --surface3: #16213e;
+  --text: #e8e8e8;
+  --text2: #8888aa;
+  --accent: #00d4ff;
+  --accent2: #0099cc;
+  --red: #ff4757;
+  --green: #2ed573;
+  --orange: #ffa502;
+  --yellow: #eccc68;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, 'PingFang SC', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* === HEADER === */
+.header {
+  background: var(--surface);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  height: 48px;
+}
+.header h1 { font-size: 16px; white-space: nowrap; }
+.header .sep { width: 1px; height: 20px; background: rgba(255,255,255,0.1); }
+
+/* === VIEWS === */
+.view { display: none; height: calc(100vh - 48px); }
+.view.active { display: flex; }
+
+/* === SELECT VIEW === */
+#selectView {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+#selectView h2 { font-size: 20px; color: var(--text2); }
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  max-width: 960px;
+  width: 100%;
+  padding: 0 20px;
+}
+.video-card {
+  background: var(--surface);
+  border: 2px solid transparent;
+  border-radius: 10px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.video-card:hover { border-color: var(--accent); background: var(--surface2); }
+.video-card .vc-name { font-size: 15px; font-weight: 600; margin-bottom: 8px; word-break: break-all; }
+.video-card .vc-meta { font-size: 13px; color: var(--text2); line-height: 1.7; }
+.video-card .vc-meta span { color: var(--text); }
+
+/* === ANALYSIS VIEW === */
+#analysisView { flex-direction: column; }
+
+/* Progress bar area */
+.progress-area {
+  background: var(--surface);
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.progress-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+.progress-top .filename { font-size: 14px; font-weight: 500; }
+.progress-top .pct { font-size: 14px; color: var(--accent); font-weight: 700; font-family: 'SF Mono', monospace; }
+.progress-top .elapsed { font-size: 13px; color: var(--text2); margin-left: auto; }
+.progress-top .vcount {
+  background: var(--red);
+  color: white;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.progress-track {
+  height: 4px;
+  background: var(--surface2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--green));
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.3s;
+}
+.progress-fill.done { background: var(--green); }
+.progress-stats {
+  display: flex;
+  gap: 20px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text2);
+}
+.progress-stats span { color: var(--text); }
+
+/* Main content (player + sidebar) */
+.analysis-main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  min-height: 0;
+}
+
+/* Player */
+.player { display: flex; flex-direction: column; padding: 12px; gap: 8px; min-height: 0; }
+.canvas-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  min-height: 0;
+}
+.canvas-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.overlay-label {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  background: rgba(0,0,0,0.75);
+  color: #fff;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: 'SF Mono', monospace;
+}
+.overlay-alert {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  padding: 3px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  display: none;
+}
+.overlay-alert.show { display: block; }
+.overlay-alert.violation { background: var(--red); color: white; animation: blink .5s ease infinite alternate; }
+.overlay-alert.suspect { background: var(--orange); color: #000; }
+@keyframes blink { from{opacity:.6} to{opacity:1} }
+
+/* Heatmap */
+.heatmap { display: flex; height: 20px; gap: 1px; border-radius: 3px; overflow: hidden; }
+.hm-cell { flex: 1; min-width: 1px; cursor: pointer; transition: opacity .1s; }
+.hm-cell:hover { opacity: .6; }
+.hm-cell.current { outline: 2px solid #fff; outline-offset: -1px; z-index: 1; }
+
+/* Scrubber */
+.scrubber {
+  position: relative;
+  height: 28px;
+  cursor: pointer;
+}
+.scrub-track {
+  position: absolute;
+  top: 50%;
+  left: 0; right: 0;
+  height: 4px;
+  background: var(--surface2);
+  border-radius: 2px;
+  transform: translateY(-50%);
+}
+.scrub-fill { height: 100%; background: var(--accent); border-radius: 2px; width: 0%; }
+.scrub-thumb {
+  position: absolute;
+  top: 50%;
+  width: 12px; height: 12px;
+  background: var(--accent);
+  border-radius: 50%;
+  transform: translate(-50%,-50%);
+  box-shadow: 0 0 6px rgba(0,212,255,.5);
+  pointer-events: none;
+}
+.scrub-marker {
+  position: absolute;
+  top: 50%;
+  width: 3px; height: 14px;
+  background: var(--red);
+  border-radius: 1px;
+  transform: translate(-50%,-50%);
+  pointer-events: none;
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.btn {
+  background: var(--surface2);
+  border: 1px solid rgba(255,255,255,.08);
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all .12s;
+  user-select: none;
+}
+.btn:hover { background: var(--accent); color: #000; }
+.btn:active { transform: scale(.96); }
+.btn.active { background: var(--accent); color: #000; }
+.btn-s { padding: 5px 8px; font-size: 12px; }
+.speed-grp { display: flex; gap: 2px; }
+.key-hints { font-size: 11px; color: var(--text2); margin-left: auto; }
+.key-hints kbd {
+  background: var(--surface2);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 10px;
+}
+
+/* Sidebar */
+.sidebar {
+  background: var(--surface);
+  border-left: 1px solid rgba(255,255,255,.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sb-tabs { display: flex; border-bottom: 1px solid rgba(255,255,255,.05); }
+.sb-tab {
+  flex: 1;
+  padding: 10px 8px;
+  text-align: center;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--text2);
+  border-bottom: 2px solid transparent;
+}
+.sb-tab:hover { color: var(--text); }
+.sb-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.sb-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+.sb-content::-webkit-scrollbar { width: 5px; }
+.sb-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 3px; }
+
+/* Violation card */
+.vc {
+  background: var(--bg);
+  border: 1px solid rgba(255,71,87,.25);
+  border-radius: 7px;
+  padding: 10px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: all .15s;
+  font-size: 13px;
+}
+.vc:hover { border-color: var(--red); background: rgba(255,71,87,.06); }
+.vc-head { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.vc-badge { background: var(--red); color: white; padding: 1px 7px; border-radius: 9px; font-size: 11px; font-weight: 600; }
+.vc-body { color: var(--text2); line-height: 1.6; font-size: 12px; }
+.vc-body b { color: var(--text); font-weight: 500; }
+
+/* Detection item */
+.di {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+.di.em { background: rgba(255,71,87,.08); }
+.di.ok { background: rgba(46,213,115,.06); }
+.dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.dot-r { background: var(--red); }
+.dot-g { background: var(--green); }
+
+/* Legend */
+.legend { display: flex; gap: 12px; font-size: 11px; color: var(--text2); }
+.legend-i { display: flex; align-items: center; gap: 3px; }
+.legend-c { width: 10px; height: 10px; border-radius: 2px; }
+
+/* Back button */
+.back-btn {
+  background: none;
+  border: 1px solid rgba(255,255,255,.1);
+  color: var(--text2);
+  padding: 5px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.back-btn:hover { color: var(--text); border-color: var(--text); }
+
+/* Empty state */
+.empty { text-align: center; padding: 40px 0; color: var(--text2); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🚨 Highway Reporter</h1>
+  <div class="sep"></div>
+  <button class="back-btn" id="btnBack" style="display:none" onclick="goBack()">← 重新选择</button>
+  <span id="headerStatus" style="font-size:13px; color:var(--text2);">选择视频开始分析</span>
+</div>
+
+<!-- SELECT VIEW -->
+<div class="view active" id="selectView">
+  <h2>📹 选择测试视频</h2>
+  <div class="video-grid" id="videoGrid">
+    <div class="empty">加载中...</div>
+  </div>
+</div>
+
+<!-- ANALYSIS VIEW -->
+<div class="view" id="analysisView">
+  <div class="progress-area">
+    <div class="progress-top">
+      <span class="filename" id="progFile">-</span>
+      <span class="pct" id="progPct">0%</span>
+      <span class="vcount" id="progV">0 违法</span>
+      <span class="elapsed" id="progTime">-</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progFill"></div></div>
+    <div class="progress-stats">
+      帧: <span id="progFrames">-</span> &nbsp;
+      速度: <span id="progSpeed">-</span> &nbsp;
+      FPS: <span id="progFps">-</span>
+    </div>
+  </div>
+
+  <div class="analysis-main">
+    <div class="player">
+      <div class="canvas-wrap">
+        <img id="frameImg" src="" alt="">
+        <div class="overlay-label" id="olLabel">-</div>
+        <div class="overlay-alert" id="olAlert"></div>
+      </div>
+      <div class="legend">
+        <div class="legend-i"><div class="legend-c" style="background:#2a2a3e"></div>无车</div>
+        <div class="legend-i"><div class="legend-c" style="background:var(--green)"></div>正常</div>
+        <div class="legend-i"><div class="legend-c" style="background:var(--orange)"></div>嫌疑</div>
+        <div class="legend-i"><div class="legend-c" style="background:var(--red)"></div>违法</div>
+      </div>
+      <div class="heatmap" id="heatmap"></div>
+      <div class="scrubber" id="scrubber">
+        <div class="scrub-track"><div class="scrub-fill" id="scrubFill"></div></div>
+        <div class="scrub-thumb" id="scrubThumb" style="left:0"></div>
+      </div>
+      <div class="controls">
+        <button class="btn btn-s" id="btnPrev">⏮</button>
+        <button class="btn" id="btnPlay">▶ 播放</button>
+        <button class="btn btn-s" id="btnNext">⏭</button>
+        <div class="speed-grp">
+          <button class="btn btn-s spd" data-s=".25">.25x</button>
+          <button class="btn btn-s spd" data-s=".5">.5x</button>
+          <button class="btn btn-s spd active" data-s="1">1x</button>
+          <button class="btn btn-s spd" data-s="2">2x</button>
+          <button class="btn btn-s spd" data-s="4">4x</button>
+        </div>
+        <button class="btn btn-s" id="btnJump">⚡ 违法</button>
+        <span class="key-hints">
+          <kbd>Space</kbd> 播放 <kbd>←→</kbd> 逐帧 <kbd>V</kbd> 跳违法
+        </span>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div class="sb-tabs">
+        <div class="sb-tab active" data-t="violations">🚨 违法</div>
+        <div class="sb-tab" data-t="detections">🔍 检测</div>
+        <div class="sb-tab" data-t="report">📋 举报</div>
+      </div>
+      <div class="sb-content" id="sbContent"><div class="empty">等待分析...</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let frames = [];
+let violations = [];
+let curIdx = 0;
+let playing = false;
+let playTimer = null;
+let speed = 1;
+let curTab = 'violations';
+let pollTimer = null;
+let fetchedCount = 0;
+let analysisStatus = 'idle';
+const imgCache = {};
+
+// === Init ===
+async function init() {
+  const resp = await fetch('/api/videos');
+  const videos = await resp.json();
+  renderVideoGrid(videos);
+}
+
+function renderVideoGrid(videos) {
+  const grid = document.getElementById('videoGrid');
+  if (videos.length === 0) {
+    grid.innerHTML = '<div class="empty">data/test-videos/ 目录为空</div>';
+    return;
+  }
+  grid.innerHTML = videos.map(v =>
+    '<div class="video-card" onclick=\'startAnalysis(' + JSON.stringify(v).replace(/'/g, "\\'") + ')\'>'
+    + '<div class="vc-name">📹 ' + v.filename + '</div>'
+    + '<div class="vc-meta">'
+    + '分辨率: <span>' + v.width + '×' + v.height + '</span><br>'
+    + '时长: <span>' + v.duration + '秒</span> · 帧数: <span>' + v.frames + '</span><br>'
+    + 'FPS: <span>' + v.fps + '</span> · 大小: <span>' + v.size_mb + 'MB</span>'
+    + '</div></div>'
+  ).join('');
+}
+
+// === Start Analysis ===
+async function startAnalysis(video) {
+  // Switch view
+  document.getElementById('selectView').classList.remove('active');
+  document.getElementById('analysisView').classList.add('active');
+  document.getElementById('btnBack').style.display = '';
+  document.getElementById('headerStatus').textContent = '分析中...';
+  document.getElementById('progFile').textContent = video.filename;
+  document.getElementById('progFps').textContent = video.fps;
+
+  // Reset
+  frames = [];
+  violations = [];
+  curIdx = 0;
+  fetchedCount = 0;
+  analysisStatus = 'analyzing';
+  for (var k in imgCache) delete imgCache[k];
+  document.getElementById('heatmap').innerHTML = '';
+  document.getElementById('sbContent').innerHTML = '<div class="empty">分析中，请稍候...</div>';
+  document.getElementById('frameImg').src = '';
+  document.getElementById('olLabel').textContent = '-';
+  document.getElementById('olAlert').className = 'overlay-alert';
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('progFill').classList.remove('done');
+  document.getElementById('progPct').textContent = '0%';
+  document.getElementById('progV').textContent = '0 违法';
+  document.getElementById('progTime').textContent = '-';
+  document.getElementById('progFrames').textContent = '-';
+  document.getElementById('progSpeed').textContent = '-';
+  document.getElementById('scrubFill').style.width = '0%';
+  document.getElementById('scrubThumb').style.left = '0';
+  // Remove old scrub markers
+  document.getElementById('scrubber').querySelectorAll('.scrub-marker').forEach(function(m) { m.remove(); });
+  stopPlay();
+
+  // Kick off analysis
+  await fetch('/api/analyze', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({video_path: video.path}),
+  });
+
+  // Start polling
+  startPoll();
+}
+
+function startPoll() {
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(pollUpdate, 500);
+}
+
+async function pollUpdate() {
+  try {
+    // Fetch status
+    const st = await (await fetch('/api/status')).json();
+    analysisStatus = st.status;
+
+    // Progress bar
+    document.getElementById('progPct').textContent = st.progress + '%';
+    document.getElementById('progFill').style.width = st.progress + '%';
+    document.getElementById('progV').textContent = st.violations_count + ' 违法';
+    document.getElementById('progTime').textContent = st.elapsed + 's';
+    document.getElementById('progFrames').textContent = st.current_frame + '/' + st.total_frames;
+
+    if (st.total_frames > 0 && st.elapsed > 0) {
+      var fpsStat = (st.current_frame / st.elapsed).toFixed(1);
+      document.getElementById('progSpeed').textContent = fpsStat + ' 帧/秒';
+    }
+
+    // Fetch new frames
+    const fr = await (await fetch('/api/frames?since=' + fetchedCount)).json();
+    if (fr.frames.length > 0) {
+      frames = frames.concat(fr.frames);
+      fetchedCount = frames.length;
+      updateHeatmap();
+      // Auto-show latest frame if not playing and first batch
+      if (!playing && curIdx <= 1) {
+        showFrame(frames.length - 1);
+      }
+    }
+
+    // Violations
+    violations = st.violations || [];
+    // Enrich with extra fields from full pipeline (if available)
+    if (st.violation_details) {
+      st.violation_details.forEach(function(vd) {
+        var match = violations.find(function(v) { return v.track_id === vd.id; });
+        if (match) {
+          match.plate = vd.plate;
+          match.vehicle_color = vd.color;
+          match.violation_time = vd.time;
+          match.location = vd.location;
+        }
+      });
+    }
+
+    // Done?
+    if (st.status === 'done') {
+      clearInterval(pollTimer);
+      document.getElementById('progFill').classList.add('done');
+      document.getElementById('headerStatus').textContent = '分析完成 ✅';
+      renderViolations();
+      addScrubMarkers();
+      // Auto-play from start
+      showFrame(0);
+      // If on report tab, refresh
+      if (curTab === 'report') renderReport();
+    } else if (st.status === 'error') {
+      clearInterval(pollTimer);
+      document.getElementById('headerStatus').textContent = '❌ 错误: ' + st.error;
+    }
+
+    if (curTab === 'violations') renderViolations();
+
+  } catch (e) { console.error('poll error', e); }
+}
+
+// === Heatmap ===
+function updateHeatmap() {
+  const hm = document.getElementById('heatmap');
+  // Rebuild (simpler for streaming)
+  hm.innerHTML = '';
+  frames.forEach((f, i) => {
+    var c = document.createElement('div');
+    c.className = 'hm-cell' + (i === curIdx ? ' current' : '');
+    if (f.has_violation) c.style.background = 'var(--red)';
+    else if (f.suspects > 0) c.style.background = 'var(--orange)';
+    else if (f.detections.length > 0) c.style.background = 'var(--green)';
+    else c.style.background = '#2a2a3e';
+    c.title = f.time + 's';
+    c.onclick = (function(idx) { return function() { showFrame(idx); }; })(i);
+    hm.appendChild(c);
+  });
+}
+
+function addScrubMarkers() {
+  var scrubber = document.getElementById('scrubber');
+  // Remove old markers
+  scrubber.querySelectorAll('.scrub-marker').forEach(function(m) { m.remove(); });
+  violations.forEach(function(v) {
+    var fi = frames.findIndex(function(f) { return f.time >= v.start_sec; });
+    if (fi >= 0 && frames.length > 1) {
+      var pct = (fi / (frames.length - 1)) * 100;
+      var m = document.createElement('div');
+      m.className = 'scrub-marker';
+      m.style.left = pct + '%';
+      scrubber.appendChild(m);
+    }
+  });
+}
+
+// === Frame display ===
+function showFrame(idx) {
+  if (idx < 0 || idx >= frames.length) return;
+  curIdx = idx;
+  var f = frames[idx];
+  document.getElementById('frameImg').src = '/api/frame/' + f.key;
+
+  document.getElementById('olLabel').textContent =
+    '帧 ' + f.idx + ' / ' + f.time + 's · ' + f.detections.length + ' 辆车';
+
+  var alert = document.getElementById('olAlert');
+  if (f.has_violation) {
+    alert.textContent = '⚠️ 确认违法！';
+    alert.className = 'overlay-alert show violation';
+  } else if (f.suspects > 0) {
+    alert.textContent = '⚠️ 嫌疑车辆';
+    alert.className = 'overlay-alert show suspect';
+  } else {
+    alert.className = 'overlay-alert';
+  }
+
+  // Scrubber
+  if (frames.length > 1) {
+    var pct = (idx / (frames.length - 1)) * 100;
+    document.getElementById('scrubFill').style.width = pct + '%';
+    document.getElementById('scrubThumb').style.left = pct + '%';
+  }
+
+  // Heatmap highlight
+  document.querySelectorAll('.hm-cell').forEach(function(c, i) {
+    if (i === idx) c.classList.add('current');
+    else c.classList.remove('current');
+  });
+
+  if (curTab === 'detections') renderDetections(f);
+
+  // Preload next
+  preload(idx + 1);
+  preload(idx + 2);
+}
+
+function preload(idx) {
+  if (idx < 0 || idx >= frames.length) return;
+  var key = frames[idx].key;
+  if (!imgCache[key]) {
+    var img = new Image();
+    img.src = '/api/frame/' + key;
+    imgCache[key] = img;
+  }
+}
+
+// === Violations ===
+function renderViolations() {
+  if (curTab !== 'violations') return;
+  var el = document.getElementById('sbContent');
+  if (violations.length === 0) {
+    el.innerHTML = analysisStatus === 'done'
+      ? '<div class="empty">✅ 未发现违法</div>'
+      : '<div class="empty">分析中...</div>';
+    return;
+  }
+  el.innerHTML = violations.map(function(v, i) {
+    return '<div class="vc" onclick="jumpViolation(' + i + ')">'
+      + '<div class="vc-head"><span class="vc-badge">#' + v.track_id + '</span> 占用应急车道</div>'
+      + '<div class="vc-body">'
+      + '车型: <b>' + v.vehicle_class + '</b><br>'
+      + '车牌: <b>' + (v.plate || '未识别') + '</b><br>'
+      + '时间: <b>' + v.start_sec + 's - ' + v.end_sec + 's</b><br>'
+      + '持续: <b>' + v.duration_frames + ' 帧</b> · 置信度: <b>' + (v.confidence * 100).toFixed(0) + '%</b>'
+      + '</div></div>';
+  }).join('');
+}
+
+function renderDetections(f) {
+  var el = document.getElementById('sbContent');
+  if (!f || f.detections.length === 0) {
+    el.innerHTML = '<div class="empty">此帧无检测</div>';
+    return;
+  }
+  var html = '<div style="font-size:11px;color:var(--text2);margin-bottom:6px">帧 ' + f.idx + ' @ ' + f.time + 's</div>';
+  f.detections.forEach(function(d) {
+    var cls = d.in_emergency ? 'em' : 'ok';
+    var dot = d.in_emergency ? 'dot-r' : 'dot-g';
+    html += '<div class="di ' + cls + '">'
+      + '<div class="dot ' + dot + '"></div>'
+      + d.class + ' '
+      + '<span style="margin-left:auto;font-size:11px;color:var(--text2)">'
+      + d.conf + ' x:' + d.cx_norm
+      + (d.in_emergency ? ' <span style="color:var(--red)">⚠</span>' : '')
+      + '</span></div>';
+  });
+  el.innerHTML = html;
+}
+
+// === Navigation ===
+function jumpViolation(i) {
+  var v = violations[i];
+  var fi = frames.findIndex(function(f) { return f.time >= v.start_sec; });
+  if (fi >= 0) showFrame(fi);
+}
+
+function jumpNext() {
+  for (var i = curIdx + 1; i < frames.length; i++) {
+    if (frames[i].has_violation || frames[i].suspects > 0) { showFrame(i); return; }
+  }
+  for (var i = 0; i <= curIdx; i++) {
+    if (frames[i].has_violation || frames[i].suspects > 0) { showFrame(i); return; }
+  }
+}
+
+// === Playback ===
+function togglePlay() {
+  playing ? stopPlay() : startPlay();
+}
+function startPlay() {
+  playing = true;
+  document.getElementById('btnPlay').textContent = '⏸ 暂停';
+  document.getElementById('btnPlay').classList.add('active');
+  tick();
+}
+function stopPlay() {
+  playing = false;
+  document.getElementById('btnPlay').textContent = '▶ 播放';
+  document.getElementById('btnPlay').classList.remove('active');
+  if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+}
+function tick() {
+  if (!playing) return;
+  var next = curIdx + 1;
+  if (next >= frames.length) { stopPlay(); showFrame(0); return; }
+  showFrame(next);
+  var dt = frames.length > 1 ? ((frames[1].time - frames[0].time) * 1000) / speed : 100;
+  playTimer = setTimeout(tick, Math.max(16, dt));
+}
+
+// === Back ===
+function goBack() {
+  stopPlay();
+  if (pollTimer) clearInterval(pollTimer);
+  document.getElementById('analysisView').classList.remove('active');
+  document.getElementById('selectView').classList.add('active');
+  document.getElementById('btnBack').style.display = 'none';
+  document.getElementById('headerStatus').textContent = '选择视频开始分析';
+  frames = [];
+  violations = [];
+}
+
+// === Events ===
+document.getElementById('btnPlay').onclick = togglePlay;
+document.getElementById('btnPrev').onclick = function() { showFrame(curIdx - 1); };
+document.getElementById('btnNext').onclick = function() { showFrame(curIdx + 1); };
+document.getElementById('btnJump').onclick = jumpNext;
+
+document.querySelectorAll('.spd').forEach(function(b) {
+  b.onclick = function() {
+    speed = parseFloat(b.dataset.s);
+    document.querySelectorAll('.spd').forEach(function(x) { x.classList.remove('active'); });
+    b.classList.add('active');
+  };
+});
+
+document.querySelectorAll('.sb-tab').forEach(function(t) {
+  t.onclick = function() {
+    curTab = t.dataset.t;
+    document.querySelectorAll('.sb-tab').forEach(function(x) { x.classList.remove('active'); });
+    t.classList.add('active');
+    if (curTab === 'violations') renderViolations();
+    else if (curTab === 'detections' && frames[curIdx]) renderDetections(frames[curIdx]);
+    else if (curTab === 'report') renderReport();
+  };
+});
+
+document.getElementById('scrubber').onclick = function(e) {
+  var rect = this.getBoundingClientRect();
+  var pct = (e.clientX - rect.left) / rect.width;
+  var idx = Math.round(pct * (frames.length - 1));
+  showFrame(Math.max(0, Math.min(idx, frames.length - 1)));
+};
+
+document.addEventListener('keydown', function(e) {
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  else if (e.code === 'ArrowLeft') { e.preventDefault(); showFrame(curIdx - 1); }
+  else if (e.code === 'ArrowRight') { e.preventDefault(); showFrame(curIdx + 1); }
+  else if (e.code === 'KeyV') { e.preventDefault(); jumpNext(); }
+});
+
+function renderReport() {
+  var el = document.getElementById('sbContent');
+  if (analysisStatus !== 'done') {
+    el.innerHTML = '<div class="empty">分析完成后显示举报材料</div>';
+    return;
+  }
+  if (violations.length === 0) {
+    el.innerHTML = '<div class="empty">✅ 无违法，无需举报</div>';
+    return;
+  }
+
+  var html = '<div style="font-size:12px;color:var(--text2);margin-bottom:8px;">深圳随手e拍 举报表单预览</div>';
+
+  violations.forEach(function(v) {
+    var canReport = v.plate && v.plate.indexOf('?') < 0;
+    var statusColor = canReport ? 'var(--green)' : 'var(--red)';
+    var statusText = canReport ? '✅ 可举报' : '❌ 缺车牌';
+
+    html += '<div style="background:var(--bg);border:1px solid ' + statusColor + '33;border-radius:7px;padding:10px;margin-bottom:8px;">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
+      + '<span style="font-size:13px;font-weight:600;">违法 #' + v.track_id + '</span>'
+      + '<span style="font-size:11px;color:' + statusColor + ';">' + statusText + '</span>'
+      + '</div>'
+      + '<table style="width:100%;font-size:12px;border-collapse:collapse;">';
+
+    var fields = [
+      ['违法类型', '占用应急车道'],
+      ['车牌号码', v.plate || '<span style=color:var(--red)>未识别</span>'],
+      ['车辆颜色', v.vehicle_color || '待识别'],
+      ['车辆类型', v.vehicle_class || '小型轿车'],
+      ['违法时间', v.violation_time || '<span style=color:var(--orange)>需云端提取</span>'],
+      ['违法地点', v.location || '<span style=color:var(--orange)>需GPS</span>'],
+      ['持续时间', v.duration_frames + ' 帧 (' + v.start_sec + 's-' + v.end_sec + 's)'],
+      ['置信度', (v.confidence * 100).toFixed(0) + '%'],
+    ];
+
+    fields.forEach(function(f) {
+      html += '<tr><td style="padding:3px 0;color:var(--text2);width:70px;">' + f[0] + '</td>'
+        + '<td style="padding:3px 0;color:var(--text);">' + f[1] + '</td></tr>';
+    });
+
+    html += '</table></div>';
+  });
+
+  // 汇总
+  var reportable = violations.filter(function(v) { return v.plate && v.plate.indexOf('?') < 0; });
+  html += '<div style="margin-top:10px;padding:8px;background:var(--bg);border-radius:6px;font-size:12px;">'
+    + '<div>可举报: <b style="color:var(--green)">' + reportable.length + '</b> / ' + violations.length + ' 起</div>'
+    + '<div style="color:var(--text2);margin-top:4px;">充值火山引擎后运行完整 Pipeline 可提取车牌、时间戳等信息</div>'
+    + '</div>';
+
+  el.innerHTML = html;
+}
+
+init();
+</script>
+</body>
+</html>
