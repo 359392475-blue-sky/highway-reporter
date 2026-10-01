@@ -14,13 +14,15 @@ from src.report_platforms import (
 )
 
 
+# All vehicle identifiers and dates in these fixtures are synthetic placeholders.
+
 class PlatformFieldTests(unittest.TestCase):
     def setUp(self):
         self.v = {
             'id': 32,
             'can_report': True,
-            'plate': '粤A12345',
-            'time': '2023/10/04 11:20:47',
+            'plate': '粤A00000',
+            'time': '2000/01/01 00:00:00',
             'location': None,
             'color': '灰色',
             'vehicle_type': '小型轿车',
@@ -30,7 +32,7 @@ class PlatformFieldTests(unittest.TestCase):
     def test_shenzhen_uses_miniprogram_labels(self):
         labels = [row[0] for row in fields_shenzhen(self.v)]
         self.assertEqual(labels[:4], ['违法行为', '号牌号码', '违法时间', '违法地点'])
-        self.assertIn('粤A12345', dict(fields_shenzhen(self.v))['号牌号码'])
+        self.assertIn('粤A00000', dict(fields_shenzhen(self.v))['号牌号码'])
 
     def test_guangzhou_offline_upload_labels(self):
         labels = [row[0] for row in fields_guangzhou(self.v)]
@@ -40,7 +42,7 @@ class PlatformFieldTests(unittest.TestCase):
 
     def test_copy_all_is_pasteable(self):
         text = copy_all(fields_shenzhen(self.v))
-        self.assertIn('号牌号码：粤A12345', text)
+        self.assertIn('号牌号码：粤A00000', text)
 
     def test_city_lookup(self):
         self.assertEqual(city_by_id('zhuhai')['name'], '珠海')
@@ -62,7 +64,7 @@ class PlatformFieldTests(unittest.TestCase):
         self.assertIn('12 小时', rows['注意'])
         shenzhen = city_by_id('guangdong-shenzhen')
         self.assertTrue(shenzhen['reward'])
-        self.assertEqual(shenzhen['fields'](self.v)[1][1], '粤A12345')
+        self.assertEqual(shenzhen['fields'](self.v)[1][1], '粤A00000')
 
     def test_locate_from_ip_pconline(self):
         from src.report_platforms import locate_from_ip

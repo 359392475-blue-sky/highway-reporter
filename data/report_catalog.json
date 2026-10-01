@@ -1,0 +1,595 @@
+{
+  "schemaVersion": "1.0.0",
+  "updated": "2026-08-19",
+  "note": "各地入口多为微信小程序/公众号，电脑网页很少能直接提交。奖励以当地当年办法为准，本目录只收录公开报道或官网写明可举报占用应急车道（或高速占道）的渠道；reward=true 表示公开资料写明有现金、积分或抵扣类奖励。",
+  "regions": [
+    {
+      "id": "beijing",
+      "province": "北京",
+      "city": "北京",
+      "reward": false,
+      "reward_note": "官方随手拍指南未写明现金奖励",
+      "form": "beijing",
+      "channel": "北京交警 APP / 京通「交警随手拍」/ 微信小程序随手拍",
+      "hint": "行驶违法：5–20秒视频或2张有位移的照片；需北京市统一身份认证。",
+      "aliases": [
+        "北京市"
+      ]
+    },
+    {
+      "id": "tianjin",
+      "province": "天津",
+      "city": "天津",
+      "reward": true,
+      "reward_note": "查实后约20–100元/起，以当年办法为准",
+      "form": "tianjin",
+      "channel": "微信「天津交警」/ 小程序「天津交通违法举报」/ 天津公安 APP",
+      "hint": "行车记录仪也可对接平台上传。",
+      "aliases": [
+        "天津市"
+      ]
+    },
+    {
+      "id": "hebei",
+      "province": "河北",
+      "city": "全省",
+      "reward": false,
+      "form": "phone122",
+      "channel": "拨打 122，或关注当地「XX交警」公众号",
+      "hint": "河北各市渠道不统一，先打电话或搜本地交警公众号。",
+      "aliases": [
+        "石家庄",
+        "唐山",
+        "保定",
+        "邯郸",
+        "廊坊"
+      ]
+    },
+    {
+      "id": "shanxi",
+      "province": "山西",
+      "city": "全省",
+      "reward": false,
+      "form": "phone122",
+      "channel": "拨打 122，或「山西交警」及各地市交警公众号",
+      "hint": "按电话或公众号提示提供时间、地点、车牌、视频。",
+      "aliases": [
+        "太原",
+        "大同"
+      ]
+    },
+    {
+      "id": "neimenggu",
+      "province": "内蒙古",
+      "city": "全区",
+      "reward": false,
+      "form": "phone122",
+      "channel": "拨打 122，或当地交警微信",
+      "hint": "地广路长，高速段建议注明桩号。",
+      "aliases": [
+        "呼和浩特",
+        "包头",
+        "内蒙古自治区"
+      ]
+    },
+    {
+      "id": "liaoning",
+      "province": "辽宁",
+      "city": "全省",
+      "reward": false,
+      "form": "generic",
+      "channel": "当地「XX交警」公众号或 122",
+      "hint": "沈阳、大连可先搜本市交警公众号随手拍。",
+      "aliases": [
+        "沈阳",
+        "大连"
+      ]
+    },
+    {
+      "id": "jilin",
+      "province": "吉林",
+      "city": "全省",
+      "reward": false,
+      "form": "phone122",
+      "channel": "122 或本地交警公众号",
+      "hint": "提供时间、地点、车牌和原始视频。",
+      "aliases": [
+        "长春"
+      ]
+    },
+    {
+      "id": "heilongjiang",
+      "province": "黑龙江",
+      "city": "哈尔滨",
+      "reward": true,
+      "reward_note": "媒体报道哈尔滨等地有随手拍奖励，以交警公告为准",
+      "form": "generic",
+      "channel": "「哈尔滨交警」等本地公众号随手拍",
+      "hint": "先确认当年是否仍有奖。",
+      "aliases": [
+        "哈尔滨",
+        "黑龙江"
+      ]
+    },
+    {
+      "id": "shanghai",
+      "province": "上海",
+      "city": "上海",
+      "reward": false,
+      "form": "shanghai",
+      "channel": "随申办市民云 APP → 上海交警专区 → 违法视频举报",
+      "hint": "原上海交警 APP 已并入随申办。",
+      "aliases": [
+        "上海市"
+      ]
+    },
+    {
+      "id": "jiangsu-suzhou",
+      "province": "江苏",
+      "city": "苏州",
+      "reward": true,
+      "reward_note": "媒体报道苏州有随手拍奖励，以交警公告为准",
+      "form": "generic",
+      "channel": "「苏州交警」公众号/小程序随手拍",
+      "hint": "占用应急车道请选对应违法类型。",
+      "aliases": [
+        "苏州"
+      ]
+    },
+    {
+      "id": "jiangsu-wuxi",
+      "province": "江苏",
+      "city": "无锡",
+      "reward": true,
+      "reward_note": "媒体报道无锡有随手拍奖励，以交警公告为准",
+      "form": "generic",
+      "channel": "「无锡交警」公众号随手拍",
+      "hint": "按小程序字段粘贴。",
+      "aliases": [
+        "无锡"
+      ]
+    },
+    {
+      "id": "jiangsu",
+      "province": "江苏",
+      "city": "全省",
+      "reward": false,
+      "form": "generic",
+      "channel": "各地「XX交警」公众号，或 122",
+      "hint": "南京、南通等以本市公众号为准。",
+      "aliases": [
+        "南京",
+        "江苏"
+      ]
+    },
+    {
+      "id": "zhejiang-hangzhou",
+      "province": "浙江",
+      "city": "杭州",
+      "reward": false,
+      "form": "generic",
+      "channel": "警察叔叔 APP → 违法举报",
+      "hint": "杭州交警主要走警察叔叔。",
+      "aliases": [
+        "杭州",
+        "浙江"
+      ]
+    },
+    {
+      "id": "zhejiang",
+      "province": "浙江",
+      "city": "全省",
+      "reward": false,
+      "form": "generic",
+      "channel": "各地交警公众号或警察叔叔",
+      "hint": "宁波、温州等以本市入口为准。",
+      "aliases": [
+        "宁波",
+        "温州"
+      ]
+    },
+    {
+      "id": "anhui",
+      "province": "安徽",
+      "city": "全省",
+      "reward": false,
+      "form": "phone122",
+      "channel": "122 或「安徽交警」/本市交警公众号",
+      "hint": "高速段注明桩号更易核实。",
+      "aliases": [
+        "合肥"
+      ]
+    },
+    {
+      "id": "fujian",
+      "province": "福建",
+      "city": "全省",
+      "reward": false,
+      "form": "generic",
+      "channel": "各地「XX交警」公众号或 122",
+      "hint": "厦门、福州先搜本市交警。",
+      "aliases": [
+        "福州",
+        "厦门"
+      ]
+    },
+    {
+      "id": "jiangxi",
+      "province": "江西",
+      "city": "全省",
+      "reward": false,
+      "form": "phone122",
+      "channel": "122 或本地交警微信",
+      "hint": "提供原始视频，不要剪辑。",
+      "aliases": [
+        "南昌"
+      ]
+    },
+    {
+      "id": "shandong-jinan",
+      "province": "山东",
+      "city": "济南",
+      "reward": true,
+      "reward_note": "媒体报道济南有随手拍奖励，以交警公告为准",
+      "form": "generic",
+      "channel": "「济南交警」公众号随手拍",
+      "hint": "按页面违法类型选择占用应急车道。",
+      "aliases": [
+        "济南"
+      ]
+    },
+    {
+      "id": "shandong",
+      "province": "山东",
+      "city": "全省",
+      "reward": false,
+      "form": "generic",
+      "channel": "各地交警公众号或 122",
+      "hint": "青岛、烟台等以本市为准。",
+      "aliases": [
+        "青岛",
+        "山东"
+      ]
+    },
+    {
+      "id": "henan-zhengzhou",
+      "province": "河南",
+      "city": "郑州",
+      "reward": true,
+      "reward_note": "媒体报道郑州有随手拍奖励，以交警公告为准",
+      "form": "generic",
+      "channel": "「郑州交警」公众号随手拍；河南高速也可邮件/电话",
+      "hint": "高速占用应急车道也可问河南高速交警。",
+      "aliases": [
+        "郑州",
+        "河南"
+      ]
+    },
+    {
+      "id": "hubei-wuhan",
+      "province": "湖北",
+      "city": "武汉",
+      "reward": true,
+      "reward_note": "媒体报道武汉随手拍有奖励，以交警公告为准",
+      "form": "generic",
+      "channel": "公众号「武汉交警」→ 惠民服务 → 随手拍",
+      "hint": "湖北高速另有「湖北高速交警」高速共治随手拍。",
+      "aliases": [
+        "武汉",
+        "湖北"
+      ]
+    },
+    {
+      "id": "hunan-expressway",
+      "province": "湖南",
+      "city": "省管高速",
+      "reward": true,
+      "reward_note": "公开报道约 30 元/起，月上限约 1500 元",
+      "form": "hunan_expressway",
+      "channel": "公众号「湖南高速警察」→ 违法举报，或小程序「湖南高速警察便民服务平台」",
+      "hint": "打开定位；提交与违法间隔通常不超过 12 小时；不要在驾驶中拍摄。",
+      "aliases": [
+        "长沙",
+        "湖南",
+        "株洲",
+        "岳阳"
+      ]
+    },
+    {
+      "id": "hunan-changsha",
+      "province": "湖南",
+      "city": "长沙",
+      "reward": true,
+      "reward_note": "市区随手拍奖励以长沙交警公告为准；高速走湖南高速警察",
+      "form": "generic",
+      "channel": "长沙走本市交警公众号；高速走「湖南高速警察」",
+      "hint": "高速公路优先用湖南高速警察入口。",
+      "aliases": [
+        "长沙市"
+      ]
+    },
+    {
+      "id": "guangdong-shenzhen",
+      "province": "广东",
+      "city": "深圳",
+      "reward": true,
+      "reward_note": "随手e拍星级用户有奖，标准以交警办法为准",
+      "form": "shenzhen",
+      "channel": "微信小程序「随手e拍」，或公众号「深圳交警」→ 交警互动 → 随手拍举报",
+      "hint": "官网没有可填网页表单。",
+      "aliases": [
+        "深圳",
+        "深圳市"
+      ]
+    },
+    {
+      "id": "guangdong-guangzhou",
+      "province": "广东",
+      "city": "广州",
+      "reward": false,
+      "form": "guangzhou",
+      "channel": "公众号「广州交警」→ 报料台 → 违法举报 → 视频·离线上传",
+      "hint": "记录仪请走离线上传；行为须在 30 日内。",
+      "aliases": [
+        "广州",
+        "广州市"
+      ]
+    },
+    {
+      "id": "guangdong-zhuhai",
+      "province": "广东",
+      "city": "珠海",
+      "reward": false,
+      "form": "message",
+      "channel": "「珠海交警」公众号/微博私信，视频邮箱 （举报邮箱请查询当地交警官方公告）",
+      "hint": "复制全文发送。",
+      "aliases": [
+        "珠海"
+      ]
+    },
+    {
+      "id": "guangdong-foshan",
+      "province": "广东",
+      "city": "佛山",
+      "reward": false,
+      "form": "generic",
+      "channel": "公众号「佛山交警」→ 交流互动 → 交通违法举报",
+      "hint": "按公众号表单粘贴。",
+      "aliases": [
+        "佛山"
+      ]
+    },
+    {
+      "id": "guangdong-dongguan",
+      "province": "广东",
+      "city": "东莞",
+      "reward": false,
+      "form": "dongguan",
+      "channel": "公众号「东莞交警」→ 业务办理 → 随手拍",
+      "hint": "类型选「机动车非紧急情况时占用高速公路应急车道」。",
+      "aliases": [
+        "东莞"
+      ]
+    },
+    {
+      "id": "guangdong-zhongshan",
+      "province": "广东",
+      "city": "中山",
+      "reward": false,
+      "form": "message",
+      "channel": "拨打 122；深中通道中山段邮箱 （举报邮箱请查询当地交警官方公告）",
+      "hint": "电话口述或发邮件。",
+      "aliases": [
+        "中山"
+      ]
+    },
+    {
+      "id": "guangdong-huizhou",
+      "province": "广东",
+      "city": "惠州",
+      "reward": false,
+      "form": "generic",
+      "channel": "公众号「惠州交警」→ 出行服务 → 占用应急车道举报",
+      "hint": "该入口专门受理占用应急车道。",
+      "aliases": [
+        "惠州"
+      ]
+    },
+    {
+      "id": "guangdong-jiangmen",
+      "province": "广东",
+      "city": "江门",
+      "reward": false,
+      "form": "message",
+      "channel": "微博「江门交警」后台私信",
+      "hint": "提供时间、地点、车牌。",
+      "aliases": [
+        "江门"
+      ]
+    },
+    {
+      "id": "guangdong",
+      "province": "广东",
+      "city": "其他地市",
+      "reward": false,
+      "form": "phone122",
+      "channel": "122，或本市「XX交警」公众号",
+      "hint": "肇庆、汕头、湛江等见本地交警公告。",
+      "aliases": [
+        "广东",
+        "汕头",
+        "湛江",
+        "肇庆"
+      ]
+    },
+    {
+      "id": "guangxi",
+      "province": "广西",
+      "city": "全区",
+      "reward": false,
+      "form": "phone122",
+      "channel": "122 或「广西交警」/本市交警",
+      "hint": "南宁、柳州先搜本市交警。",
+      "aliases": [
+        "南宁",
+        "广西壮族自治区"
+      ]
+    },
+    {
+      "id": "hainan",
+      "province": "海南",
+      "city": "全省",
+      "reward": false,
+      "form": "phone122",
+      "channel": "122 或「海南交警」公众号",
+      "hint": "环岛高速请注明路段。",
+      "aliases": [
+        "海口",
+        "三亚"
+      ]
+    },
+    {
+      "id": "chongqing",
+      "province": "重庆",
+      "city": "重庆",
+      "reward": true,
+      "reward_note": "网上受理含占用应急车道；农村道路另有现金奖",
+      "form": "chongqing",
+      "channel": "「重庆交巡警」公众号 → 警快办 → 违法举报",
+      "hint": "中心城区、快速路及全市高速可网上报；农村道路走 110/12110。",
+      "aliases": [
+        "重庆市",
+        "重庆"
+      ]
+    },
+    {
+      "id": "sichuan-expressway",
+      "province": "四川",
+      "city": "省管高速",
+      "reward": true,
+      "reward_note": "占用应急车道公开报道约 5 元/车，月上限约 100 元",
+      "form": "sichuan_expressway",
+      "channel": "四川高速交警公布的有奖举报渠道（以省公安厅/高速交警公告为准）",
+      "hint": "只针对高速公路七类违法中的占用应急车道等。",
+      "aliases": [
+        "成都",
+        "四川",
+        "绵阳",
+        "宜宾"
+      ]
+    },
+    {
+      "id": "sichuan-chengdu",
+      "province": "四川",
+      "city": "成都",
+      "reward": false,
+      "form": "generic",
+      "channel": "公众号「成都交警」→ 蓉e行 → 交通违法举报",
+      "hint": "市区走蓉e行；高速占用应急车道优先用四川高速有奖渠道。",
+      "aliases": [
+        "成都市"
+      ]
+    },
+    {
+      "id": "guizhou",
+      "province": "贵州",
+      "city": "全省",
+      "reward": false,
+      "form": "phone122",
+      "channel": "122 或本地交警微信",
+      "hint": "贵阳可搜「贵阳交警」。",
+      "aliases": [
+        "贵阳"
+      ]
+    },
+    {
+      "id": "yunnan",
+      "province": "云南",
+      "city": "全省",
+      "reward": false,
+      "form": "phone122",
+      "channel": "122 或「云南交警」/昆明交警",
+      "hint": "注明高速路名和桩号。",
+      "aliases": [
+        "昆明"
+      ]
+    },
+    {
+      "id": "xizang",
+      "province": "西藏",
+      "city": "全区",
+      "reward": false,
+      "form": "phone122",
+      "channel": "122 / 110",
+      "hint": "高海拔路段请注明具体地名。",
+      "aliases": [
+        "拉萨",
+        "西藏自治区"
+      ]
+    },
+    {
+      "id": "shaanxi-xian",
+      "province": "陕西",
+      "city": "西安",
+      "reward": true,
+      "reward_note": "有效举报奖励绿色交通文明积分，可兑礼品",
+      "form": "xian",
+      "channel": "「西安交警」微信服务号 → 随手拍 → 立即上报",
+      "hint": "其他违法一般 48 小时内；打开地图定位。",
+      "aliases": [
+        "西安",
+        "陕西"
+      ]
+    },
+    {
+      "id": "gansu",
+      "province": "甘肃",
+      "city": "全省",
+      "reward": false,
+      "form": "phone122",
+      "channel": "122 或本地交警微信",
+      "hint": "兰州可搜「兰州交警」。",
+      "aliases": [
+        "兰州"
+      ]
+    },
+    {
+      "id": "qinghai",
+      "province": "青海",
+      "city": "全省",
+      "reward": false,
+      "form": "phone122",
+      "channel": "122",
+      "hint": "提供时间、地点、车牌、原始视频。",
+      "aliases": [
+        "西宁"
+      ]
+    },
+    {
+      "id": "ningxia",
+      "province": "宁夏",
+      "city": "全区",
+      "reward": false,
+      "form": "phone122",
+      "channel": "122 或「宁夏交警」",
+      "hint": "银川可搜本市交警公众号。",
+      "aliases": [
+        "银川",
+        "宁夏回族自治区"
+      ]
+    },
+    {
+      "id": "xinjiang",
+      "province": "新疆",
+      "city": "全区",
+      "reward": false,
+      "form": "phone122",
+      "channel": "122 / 110",
+      "hint": "乌鲁木齐可搜本市交警。",
+      "aliases": [
+        "乌鲁木齐",
+        "新疆维吾尔自治区"
+      ]
+    }
+  ]
+}

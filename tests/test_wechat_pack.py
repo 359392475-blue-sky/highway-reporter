@@ -9,13 +9,15 @@ from src.report_platforms import city_by_id
 from src.wechat_pack import collect_images, write_wechat_pack
 
 
+# All vehicle identifiers and dates in these fixtures are synthetic placeholders.
+
 class WechatPackTests(unittest.TestCase):
     def setUp(self):
         self.v = {
             'id': 32,
             'can_report': True,
-            'plate': '粤A12345',
-            'time': '2023/10/04 11:20:47',
+            'plate': '粤A00000',
+            'time': '2000/01/01 00:00:00',
             'location': '广深沿江高速',
             'color': '灰色',
             'vehicle_type': '小型轿车',
@@ -48,13 +50,13 @@ class WechatPackTests(unittest.TestCase):
             html_path = pack.html_files[0]
             text = html_path.read_text(encoding='utf-8')
             self.assertEqual(html_path.name, 'report-32.html')
-            self.assertIn('粤A12345', text)
+            self.assertIn('粤A00000', text)
             self.assertIn('data:image/jpeg;base64,', text)
             self.assertIn('复制这一栏', text)
             self.assertIn('随手e拍', text)
             self.assertTrue(pack.guide.is_file())
             self.assertIn('文件传输助手', pack.guide.read_text(encoding='utf-8'))
-            self.assertIn('号牌号码：粤A12345', pack.txt_files[0].read_text(encoding='utf-8'))
+            self.assertIn('号牌号码：粤A00000', pack.txt_files[0].read_text(encoding='utf-8'))
 
 
 if __name__ == '__main__':

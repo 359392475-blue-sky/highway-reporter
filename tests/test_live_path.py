@@ -16,6 +16,8 @@ from src.report_helper import build_report_package
 from src.violation_tracker import ViolationEvent, ViolationTracker
 
 
+# All vehicle identifiers and dates in these fixtures are synthetic placeholders.
+
 class ReportPackageTests(unittest.TestCase):
     def test_html_references_copied_evidence_files(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -28,7 +30,7 @@ class ReportPackageTests(unittest.TestCase):
             output_dir = tmp / 'report_1'
             build_report_package(
                 {
-                    'plate_text': '粤A12345',
+                    'plate_text': '粤A00000',
                     'violation_type': '占用应急车道',
                     'violation_time': '2026-03-15 10:00:00',
                 },
@@ -52,15 +54,15 @@ class ReviewPageTests(unittest.TestCase):
                 'video': 'demo.mp4',
                 'video_info': {'width': 1920, 'height': 1080, 'duration': 12},
                 'pipeline': {'cloud_model': 'test', 'l2_api_calls': 1},
-                'violations': [{'id': 1, 'can_report': True, 'plate': '粤A12345'}],
+                'violations': [{'id': 1, 'can_report': True, 'plate': '粤A00000'}],
             }
             path = write_review_page(str(tmp), data)
             html = path.read_text(encoding='utf-8')
-            self.assertIn('粤A12345', html)
+            self.assertIn('粤A00000', html)
             start = html.index('id="report-data">') + len('id="report-data">')
             end = html.index('</script>', start)
             parsed = json.loads(html[start:end].replace('\\u003c', '<'))
-            self.assertEqual(parsed['violations'][0]['plate'], '粤A12345')
+            self.assertEqual(parsed['violations'][0]['plate'], '粤A00000')
 
 
 class EvidenceQualityTests(unittest.TestCase):
@@ -81,7 +83,7 @@ class EvidenceQualityTests(unittest.TestCase):
         violation = self._event(plate_text=None, plate_confidence=0.0)
         pkg = EvidencePackage(
             violation_id=32,
-            plate_text='粤A12345',
+            plate_text='粤A00000',
             vehicle_class='car',
             plate_confidence=0.95,
         )
@@ -107,16 +109,16 @@ class EvidenceQualityTests(unittest.TestCase):
 
 class CanReportTests(unittest.TestCase):
     def test_valid_plate_can_report(self):
-        self.assertTrue(evaluate_can_report('粤A12345', 0.75))
+        self.assertTrue(evaluate_can_report('粤A00000', 0.75))
 
     def test_missing_plate_cannot_report(self):
         self.assertFalse(evaluate_can_report(None, 1.0))
 
     def test_uncertain_char_cannot_report(self):
-        self.assertFalse(evaluate_can_report('粤E8A65?', 0.9))
+        self.assertFalse(evaluate_can_report('粤A0000?', 0.9))
 
     def test_low_confidence_cannot_report(self):
-        self.assertFalse(evaluate_can_report('粤A12345', 0.49))
+        self.assertFalse(evaluate_can_report('粤A00000', 0.49))
 
 
 class HighwayScoreTests(unittest.TestCase):

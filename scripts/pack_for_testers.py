@@ -15,8 +15,7 @@ INCLUDE = [
     '.env.example',
     'src',
     'web',
-    'data/README.md',
-    'LICENSE',
+    'data/yolov8n.pt',
 ]
 SKIP_DIR_NAMES = {'__pycache__', 'venv', '.git'}
 SKIP_SUFFIXES = {'.pyc', '.pyo'}
